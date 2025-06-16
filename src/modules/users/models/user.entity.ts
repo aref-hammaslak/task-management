@@ -1,3 +1,4 @@
+import { Role } from 'src/modules/auth/enums/role.enum';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
@@ -23,13 +24,28 @@ export class User {
   @Column()
   isActive: boolean;
 
-  @Column()
-  roles: string;
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.CUSTOMER,
+  })
+  role: Role;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+    nullable: true,
+    default: null,
+  })
+  refreshToken: string | null;
+
+  @Column({
+    default: false,
+  })
   isAdmin: boolean;
 
-  @Column()
+  @Column({
+    default: false,
+  })
   isEmailVerified: boolean;
 
   constructor(data: Partial<User>) {
