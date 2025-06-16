@@ -8,7 +8,7 @@ import { User } from '../modules/users/models/user.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('database.host'),
         port: configService.get('database.port'),
