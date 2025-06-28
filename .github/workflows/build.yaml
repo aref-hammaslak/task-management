@@ -41,7 +41,5 @@ jobs:
               ${{ env.IMAGE_NAME }}:latest
             file: ./Dockerfile
             push: true
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
             labels: |
               org.opencontainers.image.source=https://github.com/task-management-api
