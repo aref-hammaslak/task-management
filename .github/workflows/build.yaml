@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to build"
+        description: 'Branch to build'
         required: true
-        default: "main"
+        default: 'main'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +17,7 @@ concurrency:
 
 env:
   DOCKER_BUILDKIT: 1
-  IMAGE_NAME: ghcr.io/task-management-api
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/task-management-api
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -35,11 +35,11 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-            context: ./
-            tags: |
-              ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-              ${{ env.IMAGE_NAME }}:latest
-            file: ./Dockerfile
-            push: true
-            labels: |
-              org.opencontainers.image.source=https://github.com/task-management-api
+          context: ./
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          file: ./Dockerfile
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/task-management-api
