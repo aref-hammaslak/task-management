@@ -16,7 +16,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User as UserEntity } from './models/user.entity';
-import { RequestWithUser } from '../auth/types/current-user.type';
+import type { RequestWithUser } from '../auth/types/current-user.type';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)

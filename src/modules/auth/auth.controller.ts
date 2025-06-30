@@ -13,8 +13,8 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Response } from 'express';
-import { RequestWithUser } from './types/current-user.type';
+import type { Response } from 'express';
+import type { RequestWithUser } from './types/current-user.type';
 import { JwtRefreshGuard } from './guards/jwt-refresh-guard';
 
 @Controller('auth')

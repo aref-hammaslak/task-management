@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-// import { User } from './interfaces/user.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,7 +12,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User as UserEntity } from './models/user.entity';
 import { Role } from '../auth/enums/role.enum';
 import { UpdateUserRefreshTokenDto } from './dto/update-user-refreshtoken.dto';
-// import { NotFoundException } from '@nestjs/common';
 import bcrypt from 'bcrypt';
 
 @Injectable()
