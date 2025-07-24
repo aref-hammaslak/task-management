@@ -1,15 +1,12 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { WinstonLogger } from '../logger/winston.logger';
 
 @Injectable()
 export class LoggingMiddleware implements NestMiddleware {
-  private logger: Logger;
+  constructor(private readonly logger: WinstonLogger) {}
 
-  constructor() {
-    this.logger = new Logger();
-  }
-
-  use(req: Request, res: Response, next: NextFunction) {
+  use(req: Request, res: Response, next: NextFunction): void {
     const requestTime = Date.now();
     res.on('finish', () => {
       const responseTime = Date.now() - requestTime;

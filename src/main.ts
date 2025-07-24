@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import { WinstonLogger } from './logger/winston.logger';
-import { LoggingMiddleware } from './middlewares/logging.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -14,7 +13,6 @@ async function bootstrap() {
   const logger = WinstonLogger.getLogger(configService);
 
   app.useLogger(logger);
-  app.use(new LoggingMiddleware().use.bind(new LoggingMiddleware()));
   app.use(cookieParser());
   app.enableCors({
     origin: configService.get<string>('api.corsOrigin'),
