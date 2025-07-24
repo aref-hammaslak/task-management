@@ -161,17 +161,13 @@ describe('UsersController', () => {
   });
 
   describe('findOne', () => {
-    it('should return a user by id', async () => {
-      mockUsersService.findOne.mockResolvedValue(mockUser);
-
-      const result = await controller.findOne('1');
-
+    it('should return a user by id', () => {
+      const result = controller.findOne(mockUser);
       expect(result).toEqual({
         success: true,
         data: mockUser,
         message: 'User retrieved successfully',
       });
-      expect(mockUsersService.findOne).toHaveBeenCalledWith('1');
     });
   });
 
@@ -185,8 +181,13 @@ describe('UsersController', () => {
       mockUsersService.findOne.mockResolvedValue(mockUser);
       mockUsersService.update.mockResolvedValue(updatedUser);
       mockUsersService.canUpdateRole.mockReturnValue(true);
+      mockUser.id = '2';
 
-      const result = await controller.update('2', updateUserDto, mockRequest);
+      const result = await controller.update(
+        mockUser,
+        updateUserDto,
+        mockRequest,
+      );
 
       expect(result).toEqual({
         success: true,
@@ -197,8 +198,9 @@ describe('UsersController', () => {
     });
 
     it('should throw BadRequestException when updating own profile', async () => {
+      mockUser.id = mockRequest.user.id;
       await expect(
-        controller.update('1', updateUserDto, mockRequest),
+        controller.update(mockUser, updateUserDto, mockRequest),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -206,20 +208,20 @@ describe('UsersController', () => {
       const updateUserDtoWithRole = { ...updateUserDto, role: Role.ADMIN };
       mockUsersService.findOne.mockResolvedValue(mockUser);
       mockUsersService.canUpdateRole.mockReturnValue(false);
+      mockUser.id = '2';
 
       await expect(
-        controller.update('2', updateUserDtoWithRole, mockRequest),
+        controller.update(mockUser, updateUserDtoWithRole, mockRequest),
       ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('remove', () => {
     it('should delete a user', async () => {
-      const userToDelete = { ...mockUser, id: '2' };
-      mockUsersService.findOne.mockResolvedValue(userToDelete);
+      mockUsersService.findOne.mockResolvedValue(mockUser);
       mockUsersService.canUpdateOrDeleteUser.mockReturnValue(true);
 
-      const result = await controller.remove(mockRequest, '2');
+      const result = await controller.remove(mockRequest, mockUser);
 
       expect(result).toEqual({
         success: true,
@@ -229,17 +231,18 @@ describe('UsersController', () => {
     });
 
     it('should throw ForbiddenException when trying to delete self', async () => {
+      mockUser.id = mockRequest.user.id;
       mockUsersService.findOne.mockResolvedValue(mockUser);
-      await expect(controller.remove(mockRequest, '1')).rejects.toThrow(
+      await expect(controller.remove(mockRequest, mockUser)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
     it('should throw ForbiddenException when trying to delete admin', async () => {
-      const adminUser = { ...mockUser, isAdmin: true };
-      mockUsersService.findOne.mockResolvedValue(adminUser);
+      mockUser.isAdmin = true;
+      mockUsersService.findOne.mockResolvedValue(mockUser);
 
-      await expect(controller.remove(mockRequest, '2')).rejects.toThrow(
+      await expect(controller.remove(mockRequest, mockUser)).rejects.toThrow(
         ForbiddenException,
       );
     });
