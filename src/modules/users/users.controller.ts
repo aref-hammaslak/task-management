@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User as UserEntity } from './models/user.entity';
 import type { RequestWithUser } from '../auth/types/current-user.type';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserByIdPipe } from '../../pipes/user-by-id.pipe';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -95,10 +96,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<{ success: boolean; data: UserEntity; message: string }> {
-    const user = await this.usersService.findOne(id);
+  findOne(@Param('id', UserByIdPipe) user: UserEntity) {
     return {
       success: true,
       data: user,
@@ -108,13 +106,11 @@ export class UsersController {
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', UserByIdPipe) user: UserEntity,
     @Body() updateUserDto: UpdateUserDto,
     @Req() req: RequestWithUser,
   ): Promise<{ success: boolean; data: UserEntity; message: string }> {
-    const user = await this.usersService.findOne(id);
-
-    if (req.user.id === id) {
+    if (req.user.id === user.id) {
       throw new BadRequestException(
         'You should use /me endpoint to update current user.',
       );
@@ -131,7 +127,7 @@ export class UsersController {
         `The user with role ${req.user.role} cannot update the role of the user with role ${user.role}`,
       );
     }
-    const updatedUser = await this.usersService.update(id, updateUserDto);
+    const updatedUser = await this.usersService.update(user.id, updateUserDto);
     return {
       success: true,
       data: updatedUser,
@@ -142,9 +138,8 @@ export class UsersController {
   @Delete(':id')
   async remove(
     @Req() req: RequestWithUser,
-    @Param('id') id: string,
-  ): Promise<{ success: boolean; message: string }> {
-    const user = await this.usersService.findOne(id);
+    @Param('id', UserByIdPipe) user: UserEntity,
+  ) {
     if (user.id == req.user.id) {
       throw new ForbiddenException(
         'You cannot delete yourself. Please use /me endpoint to delete your account.',
@@ -157,7 +152,7 @@ export class UsersController {
       throw new UnauthorizedException("You don't have right permissions");
     }
 
-    await this.usersService.remove(id);
+    await this.usersService.remove(user.id);
     return {
       success: true,
       message: 'User deleted successfully',
