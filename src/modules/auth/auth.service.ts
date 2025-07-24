@@ -7,7 +7,7 @@ import { UsersService } from '../users/users.service';
 import { User as UserEntity } from '../users/models/user.entity';
 import { UpdateUserRefreshTokenDto } from '../users/dto/update-user-refreshtoken.dto';
 import { SignupDto } from './dto/signup.dto';
-import { Response } from 'express';
+import { JwtTokens } from './types/jwt-tokens.type';
 
 @Injectable()
 export class AuthService {
@@ -30,11 +30,15 @@ export class AuthService {
       role: user.role,
       fullName: user.fullName,
     };
-    const tokens = await this.getTokens(user.id, user.email, user.role);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    const tokens = await this.generateRefreshAndAccessToken(
+      user.id,
+      user.email,
+      user.role,
+    );
+    await this.updateRefreshTokenInDb(user.id, tokens.refreshToken);
 
     return {
-      accessToken: tokens.accessToken,
+      tokens,
       user: createdUser,
     };
   }
@@ -51,8 +55,12 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
     }
-    const tokens = await this.getTokens(user.id, user.email, user.role);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    const tokens = await this.generateRefreshAndAccessToken(
+      user.id,
+      user.email,
+      user.role,
+    );
+    await this.updateRefreshTokenInDb(user.id, tokens.refreshToken);
 
     return {
       tokens,
@@ -65,14 +73,17 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, refreshToken: string, res: Response) {
+  async refreshTokens(userId: string): Promise<JwtTokens> {
     const user = await this.usersService.findOne(userId);
     if (!user || !user.refreshToken) {
       throw new UnauthorizedException('Access denied');
     }
-    const tokens = await this.getTokens(user.id, user.email, user.role);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    this.addRefreshTokenToCookie(res, tokens.refreshToken);
+    const tokens = await this.generateRefreshAndAccessToken(
+      user.id,
+      user.email,
+      user.role,
+    );
+    await this.updateRefreshTokenInDb(user.id, tokens.refreshToken);
     return tokens;
   }
 
@@ -83,7 +94,11 @@ export class AuthService {
     return true;
   }
 
-  private async getTokens(userId: string, email: string, role: string) {
+  private async generateRefreshAndAccessToken(
+    userId: string,
+    email: string,
+    role: string,
+  ) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -116,23 +131,9 @@ export class AuthService {
     };
   }
 
-  private async updateRefreshToken(userId: string, hashedRefreshToken: string) {
+  private async updateRefreshTokenInDb(userId: string, refreshToken: string) {
     await this.usersService.update(userId, {
-      refreshToken: hashedRefreshToken,
+      refreshToken,
     });
-  }
-
-  addRefreshTokenToCookie(res: Response, refreshToken: string) {
-    res.setHeader(
-      'Set-Cookie',
-      `refreshToken=${refreshToken}; HttpOnly; Secure; Max-Age=${this.configService.get('auth.JWT_REFRESH_EXPIRES_IN')}; Path=/api/auth/refresh`,
-    );
-  }
-
-  removeRefreshTokenFromCookie(res: Response) {
-    res.setHeader(
-      'Set-Cookie',
-      `refreshToken=; HttpOnly; Secure; Max-Age=0; Path=/api/auth/refresh`,
-    );
   }
 }
