@@ -1,14 +1,16 @@
 import { Role } from 'src/modules/auth/enums/role.enum';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('idx_full_name')
   @Column()
   fullName: string;
 
+  @Index('idx_email')
   @Column()
   email: string;
 
