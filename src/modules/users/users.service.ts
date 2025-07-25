@@ -3,23 +3,34 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { Repository } from 'typeorm';
+import { Equal, Not, Repository, Like, FindOptionsWhere } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User as UserEntity } from './models/user.entity';
 import { Role } from '../auth/enums/role.enum';
 import { UpdateUserRefreshTokenDto } from './dto/update-user-refreshtoken.dto';
 import bcrypt from 'bcrypt';
+import { PaginationFilterDto } from './dto/pagination-filter.dto';
+import { UsersFilterDto } from './dto/users-filter.dto';
+import { USER_EXPOSED_FIELDS } from './constants/user-exposed-fields.constant';
+import { REQUEST } from '@nestjs/core';
+import type { RequestWithUser } from '../auth/types/current-user.type';
 
 @Injectable()
 export class UsersService {
+  static readonly USER_EXPOSED_FIELDS = Object.fromEntries(
+    USER_EXPOSED_FIELDS.map((field) => [field, true]),
+  );
   private readonly logger = new Logger(UsersService.name);
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @Inject(REQUEST)
+    private readonly request: RequestWithUser,
   ) {}
 
   private readonly ROLE_HIERARCHY = {
@@ -47,8 +58,51 @@ export class UsersService {
     return await this.userRepository.save(user);
   }
 
-  async findAll(): Promise<UserEntity[]> {
-    return await this.userRepository.find();
+  async findAll(
+    filter: UsersFilterDto,
+    pagination: PaginationFilterDto,
+    search?: string,
+  ): Promise<{ users: UserEntity[]; total: number }> {
+    const { page, limit, sortBy, sortDirection } = pagination;
+    const skip = page * limit;
+    this.logger.debug(filter, 'filter');
+    this.logger.debug(pagination, 'pagination');
+
+    this.logger.debug(`filter: ${JSON.stringify(filter)}`);
+    let whereClause:
+      | FindOptionsWhere<UserEntity>
+      | FindOptionsWhere<UserEntity>[] = {
+      ...filter,
+      // id: Not(Equal(this.request.user.id)),
+    };
+
+    if (search && search.trim()) {
+      const searchTerm = `%${search.trim()}%`;
+      whereClause = [
+        {
+          ...whereClause,
+          fullName: Like(searchTerm),
+        },
+        {
+          ...whereClause,
+          email: Like(searchTerm),
+        },
+      ];
+    }
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where: whereClause,
+      skip,
+      take: limit,
+      order: {
+        [sortBy]: sortDirection,
+      },
+      select: UsersService.USER_EXPOSED_FIELDS,
+    });
+    return {
+      users,
+      total,
+    };
   }
 
   async findOne(id: string): Promise<UserEntity> {
