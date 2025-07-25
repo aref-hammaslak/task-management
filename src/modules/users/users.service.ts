@@ -1,13 +1,13 @@
 import {
   // ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Repository } from 'typeorm';
-import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User as UserEntity } from './models/user.entity';
 import { Role } from '../auth/enums/role.enum';
@@ -16,10 +16,10 @@ import bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private logger: Logger,
   ) {}
 
   private readonly ROLE_HIERARCHY = {

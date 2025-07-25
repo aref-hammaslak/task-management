@@ -8,7 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { DatabaseModule } from './database/database.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import databaseConfig from './configs/database.config';
 import { AuthModule } from './modules/auth/auth.module';
 import authConfig from './configs/auth.config';
@@ -33,7 +33,12 @@ import { APP_FILTER, APP_PIPE } from '@nestjs/core';
   controllers: [AppController],
   providers: [
     AppService,
-    WinstonLogger,
+    {
+      provide: WinstonLogger,
+      useFactory: (configService: ConfigService) =>
+        WinstonLogger.getLogger(configService),
+      inject: [ConfigService],
+    },
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

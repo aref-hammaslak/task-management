@@ -20,9 +20,9 @@ import { ConfigService } from '@nestjs/config';
 @Controller('auth')
 export class AuthController {
   private readonly LOGCONTEXT = 'AuthController';
+  private readonly logger = new Logger(AuthController.name);
   constructor(
     private authService: AuthService,
-    private logger: Logger,
     private configService: ConfigService,
   ) {}
 

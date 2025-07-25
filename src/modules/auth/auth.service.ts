@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
@@ -11,6 +11,7 @@ import { JwtTokens } from './types/jwt-tokens.type';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
@@ -18,6 +19,7 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto) {
+    this.logger.log(`Signing up user ${signupDto.email}`, 'AuthService');
     const user: UserEntity = await this.usersService.create({
       email: signupDto.email,
       password: await bcrypt.hash(signupDto.password, 10),
@@ -44,6 +46,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    this.logger.log(`Logging in user ${loginDto.email}`, 'AuthService');
     const user = await this.usersService.findUserByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -74,6 +77,7 @@ export class AuthService {
   }
 
   async refreshTokens(userId: string): Promise<JwtTokens> {
+    this.logger.log(`Refreshing tokens for user ${userId}`, 'AuthService');
     const user = await this.usersService.findOne(userId);
     if (!user || !user.refreshToken) {
       throw new UnauthorizedException('Access denied');
@@ -88,6 +92,7 @@ export class AuthService {
   }
 
   async logout(userId: string) {
+    this.logger.log(`Logging out user ${userId}`, 'AuthService');
     await this.usersService.update(userId, {
       refreshToken: null,
     } as UpdateUserRefreshTokenDto);

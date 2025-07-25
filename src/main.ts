@@ -10,9 +10,9 @@ async function bootstrap() {
     bufferLogs: true,
   });
   const configService = app.get(ConfigService);
-  const logger = WinstonLogger.getLogger(configService);
-
+  const logger = app.get(WinstonLogger);
   app.useLogger(logger);
+
   app.use(cookieParser());
   app.enableCors({
     origin: configService.get<string>('api.corsOrigin'),
