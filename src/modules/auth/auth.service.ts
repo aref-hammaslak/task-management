@@ -113,7 +113,10 @@ export class AuthService {
         },
         {
           secret: this.configService.get('auth.JWT_ACCESS_SECRET'),
-          expiresIn: this.configService.get('auth.JWT_ACCESS_EXPIRES_IN'),
+          expiresIn: parseInt(
+            this.configService.get('auth.JWT_ACCESS_EXPIRES_IN') as string,
+            10,
+          ),
         },
       ),
       this.jwtService.signAsync(
@@ -125,7 +128,10 @@ export class AuthService {
         },
         {
           secret: this.configService.get('auth.JWT_REFRESH_SECRET'),
-          expiresIn: this.configService.get('auth.JWT_REFRESH_EXPIRES_IN'),
+          expiresIn: parseInt(
+            this.configService.get('auth.JWT_REFRESH_EXPIRES_IN') as string,
+            10,
+          ),
         },
       ),
     ]);
